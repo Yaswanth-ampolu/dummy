@@ -1,15 +1,21 @@
 {
-  "name": "nextn",
+  "name": "chatvisor",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 9002",
+    "dev:frontend": "next dev --turbopack -p 9002",
+    "dev:backend": "node src/backend/server.js",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
-    "build": "next build",
-    "start": "next start",
+    "build:frontend": "next build",
+    "start:frontend": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "npm run build:frontend && npm run build:backend",
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "build:backend": "tsc -p src/backend",
+    "start:backend": "node dist/server.js"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.0.4",
@@ -39,6 +45,7 @@
     "@tanstack/react-query": "^5.66.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "concurrently": "*",
     "date-fns": "^3.6.0",
     "firebase": "^11.3.0",
     "genkit": "^1.0.4",

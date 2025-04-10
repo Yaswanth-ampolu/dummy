@@ -4,9 +4,7 @@ import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
-import {useState} from 'react';
-import {generateChatTitle} from '@/ai/flows/generate-chat-title';
-import {summarizeChatHistory} from '@/ai/flows/summarize-chat-history';
+import {useState, useEffect} from 'react';
 
 export default function Home() {
   const [userInput, setUserInput] = useState('');
@@ -19,21 +17,30 @@ export default function Home() {
 
   const handleSubmit = async () => {
     if (userInput.trim() !== '') {
-      setChatHistory([...chatHistory, `User: ${userInput}`]);
-      // Simulate AI response (replace with actual AI integration)
-      const aiResponse = `AI: This is a dummy response for: ${userInput}`;
-      setChatResponse(aiResponse);
-      setChatHistory([...chatHistory, `User: ${userInput}`, aiResponse]);
+      setChatHistory(prev => [...prev, `User: ${userInput}`]);
 
-      // Generate chat title
-      const chatTitle = await generateChatTitle({chatHistory: chatHistory.join('\n')});
-      console.log(`Chat title: ${chatTitle.title}`);
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({userInput: userInput, chatHistory: chatHistory}),
+        });
 
-      // Summarize chat history
-      const chatSummary = await summarizeChatHistory({chatHistory: chatHistory.join('\n')});
-      console.log(`Chat summary: ${chatSummary.summary}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-      setUserInput(''); // Clear the input after submitting
+        const data = await response.json();
+        setChatResponse(data.response);
+        setChatHistory(prev => [...prev, `AI: ${data.response}`]);
+
+        setUserInput(''); // Clear the input after submitting
+      } catch (error) {
+        console.error('Error submitting chat:', error);
+        setChatResponse('Error processing your request. Please try again.');
+      }
     }
   };
 
